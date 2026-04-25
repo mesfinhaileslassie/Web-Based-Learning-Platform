@@ -11,10 +11,13 @@ function updateNavAuth() {
     if (isLoggedIn()) {
         const user = MOCK_API.currentUser;
         let adminLink = '';
+        let profileLink = '<a href="profile.html">👤 My Profile</a>';
+        
         if (user.role === 'admin') {
-            adminLink = `<a href="admin.html">Admin Panel</a>`;
+            adminLink = `<a href="admin.html">⚙️ Admin Panel</a>`;
         }
-        authLink.innerHTML = `👤 ${user.name} (Logout)`;
+        
+        authLink.innerHTML = `🚪 Logout (${user.name})`;
         authLink.href = "#";
         authLink.onclick = (e) => {
             e.preventDefault();
@@ -22,18 +25,23 @@ function updateNavAuth() {
                 window.location.href = "index.html";
             });
         };
-        // Add admin link after authLink if not already present
+        
         const navLinks = document.querySelector('.nav-links');
-        if (adminLink && !document.querySelector('.nav-links a[href="admin.html"]')) {
-            navLinks.insertAdjacentHTML('beforeend', adminLink);
+        // Remove existing dynamic links to avoid duplicates
+        const existingProfile = document.querySelector('.nav-links a[href="profile.html"]');
+        const existingAdmin = document.querySelector('.nav-links a[href="admin.html"]');
+        if (existingProfile) existingProfile.remove();
+        if (existingAdmin) existingAdmin.remove();
+        
+        // Insert profile link before authLink
+        authLink.insertAdjacentHTML('beforebegin', profileLink);
+        if (adminLink) {
+            authLink.insertAdjacentHTML('beforebegin', adminLink);
         }
     } else {
-        authLink.innerHTML = "Login / Register";
+        authLink.innerHTML = "🔐 Login / Register";
         authLink.href = "login.html";
         authLink.onclick = null;
-        // Remove admin link if any
-        const adminLinkElem = document.querySelector('.nav-links a[href="admin.html"]');
-        if (adminLinkElem) adminLinkElem.remove();
     }
 }
 

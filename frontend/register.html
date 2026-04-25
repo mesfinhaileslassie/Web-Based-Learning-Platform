@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         .register-container {
-            max-width: 400px;
-            margin: 4rem auto;
+            max-width: 600px;
+            margin: 2rem auto;
             background: white;
             border-radius: 1rem;
             padding: 2rem;
@@ -18,6 +18,11 @@
             text-align: center;
             margin-bottom: 1.5rem;
         }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
         .form-group {
             margin-bottom: 1rem;
         }
@@ -26,7 +31,10 @@
             margin-bottom: 0.25rem;
             font-weight: 500;
         }
-        .form-group input {
+        .form-group label .required {
+            color: #dc2626;
+        }
+        .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ccc;
@@ -37,6 +45,7 @@
             width: 100%;
             padding: 0.75rem;
             margin-top: 1rem;
+            font-size: 1.1rem;
         }
         .error-message {
             background: #fee2e2;
@@ -50,6 +59,13 @@
             margin-top: 1rem;
             color: #6b7280;
         }
+        .password-strength {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+        .weak { color: #dc2626; }
+        .medium { color: #f59e0b; }
+        .strong { color: #10b981; }
     </style>
 </head>
 <body>
@@ -67,23 +83,68 @@
         <h1>Create an Account</h1>
         <div id="errorMsg" class="error-message" style="display:none;"></div>
         <form id="registerForm">
-            <div class="form-group">
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required placeholder="John Doe">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
             </div>
+
             <div class="form-group">
-                <label for="email">Email address</label>
-                <input type="email" id="email" name="email" required placeholder="you@example.com">
+                <label>Email Address <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Phone Number <span class="required">*</span></label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+1234567890">
+                </div>
+                <div class="form-group">
+                    <label>Country <span class="required">*</span></label>
+                    <select id="country" name="country" required>
+                        <option value="">Select Country</option>
+                        <option value="USA">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                        <option value="India">India</option>
+                        <option value="Ethiopia">Ethiopia</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••••">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="city" name="city" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" id="dob" name="dob">
+                </div>
             </div>
-            <button type="submit" class="btn btn-register">Register</button>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password <span class="required">*</span></label>
+                    <input type="password" id="password" name="password" required>
+                    <div id="passwordStrength" class="password-strength"></div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password <span class="required">*</span></label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-register">Create Account</button>
         </form>
         <div class="info-text">
             Already have an account? <a href="login.html">Login here</a>
@@ -92,27 +153,87 @@
 
     <script src="js/mock-api.js"></script>
     <script>
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]+/)) strength++;
+            if (password.match(/[A-Z]+/)) strength++;
+            if (password.match(/[0-9]+/)) strength++;
+            if (password.match(/[$@#&!]+/)) strength++;
+            
+            if (strength <= 2) return { text: 'Weak', class: 'weak' };
+            if (strength <= 4) return { text: 'Medium', class: 'medium' };
+            return { text: 'Strong', class: 'strong' };
+        }
+
+        document.getElementById('password').addEventListener('input', (e) => {
+            const strength = checkPasswordStrength(e.target.value);
+            const strengthDiv = document.getElementById('passwordStrength');
+            strengthDiv.innerHTML = `Password strength: <span class="${strength.class}">${strength.text}</span>`;
+        });
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const country = document.getElementById('country').value;
+            const city = document.getElementById('city').value.trim();
+            const dob = document.getElementById('dob').value;
             const password = document.getElementById('password').value;
             const confirm = document.getElementById('confirm_password').value;
             const errorDiv = document.getElementById('errorMsg');
+
+            // Validation
+            if (!firstName || !lastName || !email || !phone || !country || !password) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Please fill in all required fields.";
+                return;
+            }
 
             if (password !== confirm) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = "Passwords do not match.";
                 return;
             }
+
             if (password.length < 4) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = "Password must be at least 4 characters.";
                 return;
             }
 
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Please enter a valid email address.";
+                return;
+            }
+
+            const phoneRegex = /^[\+\d\s\-\(\)]{8,20}$/;
+            if (!phoneRegex.test(phone)) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Please enter a valid phone number.";
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
             try {
-                const result = await MOCK_API.register(name, email, password);
+                const result = await MOCK_API.register({
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    phone: phone,
+                    country: country,
+                    city: city,
+                    dob: dob,
+                    password: password
+                });
+                
                 if (result.success) {
                     window.location.href = 'dashboard.html';
                 }

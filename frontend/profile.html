@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-container {
+            max-width: 700px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .profile-container h1 {
+            margin-bottom: 1.5rem;
+        }
+        .profile-image {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .profile-image img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #2563eb;
+        }
+        .profile-image button {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .readonly-field {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .btn-save {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
+        .alert {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 2rem;
+        }
+        .tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+        }
+        .tab.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: bold;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="authLink">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <h1>My Profile</h1>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="info">Personal Information</button>
+            <button class="tab" data-tab="security">Security</button>
+        </div>
+        
+        <div id="infoTab" class="tab-pane active">
+            <div class="profile-image">
+                <img id="profileImage" src="https://ui-avatars.com/api/?background=2563eb&color=fff&rounded=true&bold=true&size=120" alt="Profile">
+                <button id="changePhotoBtn" class="btn btn-sm">Change Photo (Mock)</button>
+            </div>
+            
+            <form id="profileForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="readonly-field" readonly>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <select id="country" required>
+                            <option value="">Select Country</option>
+                            <option value="USA">United States</option>
+                            <option value="UK">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                            <option value="Australia">Australia</option>
+                            <option value="Germany">Germany</option>
+                            <option value="France">France</option>
+                            <option value="India">India</option>
+                            <option value="Ethiopia">Ethiopia</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="city">
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="dob">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Member Since</label>
+                    <input type="text" id="memberSince" class="readonly-field" readonly>
+                </div>
+                
+                <div id="profileMessage"></div>
+                <button type="submit" class="btn btn-save">Save Changes</button>
+            </form>
+        </div>
+        
+        <div id="securityTab" class="tab-pane">
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required>
+                    <div id="newPasswordStrength" class="password-strength" style="font-size:0.8rem;"></div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" required>
+                </div>
+                <div id="passwordMessage"></div>
+                <button type="submit" class="btn btn-save">Change Password</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        let currentUserProfile = null;
+        
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tabName}Tab`).classList.add('active');
+            });
+        });
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.match(/[a-z]+/)) strength++;
+            if (password.match(/[A-Z]+/)) strength++;
+            if (password.match(/[0-9]+/)) strength++;
+            if (password.match(/[$@#&!]+/)) strength++;
+            
+            if (strength <= 2) return { text: 'Weak', class: 'weak' };
+            if (strength <= 4) return { text: 'Medium', class: 'medium' };
+            return { text: 'Strong', class: 'strong' };
+        }
+        
+        document.getElementById('newPassword').addEventListener('input', (e) => {
+            const strength = checkPasswordStrength(e.target.value);
+            const strengthDiv = document.getElementById('newPasswordStrength');
+            strengthDiv.innerHTML = `Password strength: <span class="${strength.class}">${strength.text}</span>`;
+        });
+        
+        // Load user profile
+        async function loadProfile() {
+            const user = MOCK_API.currentUser;
+            if (!user) {
+                window.location.href = 'login.html?returnUrl=profile.html';
+                return;
+            }
+            
+            const profile = await MOCK_API.getUserProfile(user.id);
+            currentUserProfile = profile;
+            
+            if (profile) {
+                document.getElementById('firstName').value = profile.firstName || '';
+                document.getElementById('lastName').value = profile.lastName || '';
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('country').value = profile.country || '';
+                document.getElementById('city').value = profile.city || '';
+                document.getElementById('dob').value = profile.dob || '';
+                document.getElementById('memberSince').value = profile.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A';
+                
+                // Update avatar
+                const initials = `${profile.firstName?.charAt(0) || ''}${profile.lastName?.charAt(0) || ''}`.toUpperCase();
+                document.getElementById('profileImage').src = `https://ui-avatars.com/api/?background=2563eb&color=fff&rounded=true&bold=true&size=120&name=${initials}`;
+            }
+        }
+        
+        // Save profile changes
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = MOCK_API.currentUser;
+            const messageDiv = document.getElementById('profileMessage');
+            
+            try {
+                const result = await MOCK_API.updateUserProfile(user.id, {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    phone: document.getElementById('phone').value,
+                    country: document.getElementById('country').value,
+                    city: document.getElementById('city').value,
+                    dob: document.getElementById('dob').value
+                });
+                
+                if (result.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">Profile updated successfully!</div>';
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 3000);
+                    loadProfile(); // Reload to update avatar
+                }
+            } catch (err) {
+                messageDiv.innerHTML = `<div class="alert alert-error">${err.error || 'Update failed'}</div>`;
+            }
+        });
+        
+        // Change password
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = MOCK_API.currentUser;
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            const messageDiv = document.getElementById('passwordMessage');
+            
+            if (newPassword !== confirmPassword) {
+                messageDiv.innerHTML = '<div class="alert alert-error">New passwords do not match.</div>';
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                messageDiv.innerHTML = '<div class="alert alert-error">Password must be at least 4 characters.</div>';
+                return;
+            }
+            
+            try {
+                const result = await MOCK_API.changePassword(user.id, currentPassword, newPassword);
+                if (result.success) {
+                    messageDiv.innerHTML = '<div class="alert alert-success">Password changed successfully!</div>';
+                    document.getElementById('passwordForm').reset();
+                    setTimeout(() => {
+                        messageDiv.innerHTML = '';
+                    }, 3000);
+                }
+            } catch (err) {
+                messageDiv.innerHTML = `<div class="alert alert-error">${err.error || 'Password change failed'}</div>`;
+            }
+        });
+        
+        document.getElementById('changePhotoBtn').addEventListener('click', () => {
+            alert('Photo upload will be available in the next update.');
+        });
+        
+        loadProfile();
+    </script>
+</body>
+</html>
