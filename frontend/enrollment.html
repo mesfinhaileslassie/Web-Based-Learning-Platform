@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enroll | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .enrollment-container {
+            max-width: 600px;
+            margin: 3rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .course-summary {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin: 1.5rem 0;
+        }
+        .price-large {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .deadline-note {
+            background: #e0f2fe;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .btn-block {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="login.html">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="enrollment-container" id="enrollmentContainer">
+        <div class="loading">Loading course details...</div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        // Get course ID from URL
+        function getCourseIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('course_id');
+        }
+
+        async function loadEnrollmentPage() {
+            const courseId = getCourseIdFromURL();
+            if (!courseId) {
+                document.getElementById('enrollmentContainer').innerHTML = '<p>Invalid course. <a href="index.html">Go back</a></p>';
+                return;
+            }
+
+            // Check if user is logged in
+            if (!MOCK_API.currentUser) {
+                document.getElementById('enrollmentContainer').innerHTML = `
+                    <div class="course-summary">
+                        <p>Please login to enroll.</p>
+                        <a href="login.html" class="btn btn-block">Login</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const course = await MOCK_API.getCourseDetail(courseId);
+                const user = MOCK_API.currentUser;
+                const alreadyEnrolled = MOCK_API.isEnrolled(user.id, course.id);
+                
+                if (alreadyEnrolled) {
+                    document.getElementById('enrollmentContainer').innerHTML = `
+                        <div class="course-summary">
+                            <h2>✅ Already Enrolled</h2>
+                            <p>You are already enrolled in <strong>${course.title}</strong>.</p>
+                            <a href="learn.html?course_id=${course.id}" class="btn btn-block">Continue Learning →</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render enrollment form
+                document.getElementById('enrollmentContainer').innerHTML = `
+                    <h1>Complete Your Enrollment</h1>
+                    <div class="course-summary">
+                        <h3>${course.title}</h3>
+                        <p>${course.description}</p>
+                        <div class="price-large">$${course.price}</div>
+                    </div>
+                    <div class="deadline-note">
+                        ⏰ After enrollment, you will have <strong>3 months</strong> to complete the course and pass the final exam.<br>
+                        📝 You get <strong>3 free exam attempts</strong>. Extra attempts can be purchased later.
+                    </div>
+                    <button id="confirmEnrollBtn" class="btn btn-block">Confirm & Pay (Mock)</button>
+                    <button id="cancelBtn" class="btn btn-outline btn-block" style="margin-top: 0.5rem;">Cancel</button>
+                    <div id="enrollMessage" style="margin-top: 1rem;"></div>
+                `;
+
+                document.getElementById('confirmEnrollBtn').addEventListener('click', async () => {
+                    const btn = document.getElementById('confirmEnrollBtn');
+                    btn.disabled = true;
+                    btn.textContent = 'Processing...';
+                    const msgDiv = document.getElementById('enrollMessage');
+                    
+                    try {
+                        const result = await MOCK_API.enroll(user.id, course.id);
+                        if (result.success) {
+                            msgDiv.innerHTML = '<div class="alert alert-success">Enrollment successful! Redirecting to learning...</div>';
+                            setTimeout(() => {
+                                window.location.href = `learn.html?course_id=${course.id}`;
+                            }, 1500);
+                        }
+                    } catch (err) {
+                        msgDiv.innerHTML = `<div class="alert alert-error">${err.error || 'Enrollment failed'}</div>`;
+                        btn.disabled = false;
+                        btn.textContent = 'Confirm & Pay';
+                    }
+                });
+
+                document.getElementById('cancelBtn').addEventListener('click', () => {
+                    window.location.href = `course-detail.html?id=${course.id}`;
+                });
+
+            } catch (err) {
+                document.getElementById('enrollmentContainer').innerHTML = `<p>Error loading course: ${err}</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadEnrollmentPage);
+    </script>
+</body>
+</html>

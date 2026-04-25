@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .login-container h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .info-text {
+            text-align: center;
+            margin-top: 1rem;
+            color: #6b7280;
+        }
+        .demo-credentials {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="login.html">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="login-container">
+        <h1>Login to LearnPlatform</h1>
+        <div id="errorMsg" class="error-message" style="display:none;"></div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" required placeholder="student@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-login">Login</button>
+        </form>
+        
+        <div class="demo-credentials">
+            <strong>Demo Accounts:</strong><br>
+            Student: student@example.com / any password<br>
+            Admin: admin@example.com / admin123
+        </div>
+        <div class="info-text">
+            Don't have an account? <a href="#" id="registerLink">Register</a> (mock – just login)
+        </div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+            
+            try {
+                const result = await MOCK_API.login(email, password);
+                if (result.success) {
+                    // Redirect based on role
+                    if (result.user.role === 'admin') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                }
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = err.message || 'Login failed. Please try again.';
+            }
+        });
+        
+        document.getElementById('registerLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('Registration is simplified: just use any email/password to login. Account will be created automatically.');
+        });
+    </script>
+</body>
+</html>

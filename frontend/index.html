@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnPlatform – Programming Courses</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="authLink">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>Master Programming with <span>3-Month</span> Challenges</h1>
+            <p>Learn at your pace, pass the final exam (≥60%), and earn a verified certificate.</p>
+        </div>
+    </section>
+
+    <!-- Course Grid -->
+    <section class="courses-section">
+        <div class="container">
+            <h2>Our Courses</h2>
+            <div id="courseGrid" class="course-grid">
+                <!-- Courses will be loaded here by JS -->
+                <div class="loading">Loading courses...</div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/index.js"></script>
+</body>
+</html>

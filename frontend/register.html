@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .register-container {
+            max-width: 400px;
+            margin: 4rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .register-container h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .btn-register {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .info-text {
+            text-align: center;
+            margin-top: 1rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="login.html">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="register-container">
+        <h1>Create an Account</h1>
+        <div id="errorMsg" class="error-message" style="display:none;"></div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input type="email" id="email" name="email" required placeholder="you@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn btn-register">Register</button>
+        </form>
+        <div class="info-text">
+            Already have an account? <a href="login.html">Login here</a>
+        </div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const errorDiv = document.getElementById('errorMsg');
+
+            if (password !== confirm) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Passwords do not match.";
+                return;
+            }
+            if (password.length < 4) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Password must be at least 4 characters.";
+                return;
+            }
+
+            try {
+                const result = await MOCK_API.register(name, email, password);
+                if (result.success) {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = err.message || 'Registration failed. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>

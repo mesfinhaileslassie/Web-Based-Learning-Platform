@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Exam | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .exam-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .exam-header {
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .exam-question {
+            background: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .option {
+            margin: 0.5rem 0;
+            padding-left: 0.5rem;
+        }
+        .option label {
+            margin-left: 0.5rem;
+        }
+        .exam-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.5rem;
+        }
+        .timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #dc2626;
+            text-align: right;
+        }
+        [contenteditable="true"] {
+            user-select: text;
+        }
+        .disable-select {
+            user-select: none;
+        }
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            opacity: 0.2;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body class="disable-select">
+    <div class="watermark" id="watermark"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="authLink">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="exam-container" id="examContainer">
+        <div class="loading">Loading exam...</div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/exam.js"></script>
+</body>
+</html>

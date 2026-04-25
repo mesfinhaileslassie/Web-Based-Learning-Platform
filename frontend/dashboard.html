@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .enrollment-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .enrollment-card:hover {
+            transform: translateY(-2px);
+        }
+        .deadline {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin: 0.5rem 0;
+        }
+        .deadline.urgent {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 9999px;
+            height: 0.5rem;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #2563eb;
+            height: 100%;
+            width: 0%;
+            border-radius: 9999px;
+            transition: width 0.3s;
+        }
+        .exam-attempts {
+            display: inline-block;
+            background: #f3f4f6;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        .certificate-badge {
+            display: inline-block;
+            background: #d1fae5;
+            color: #065f46;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+            margin-right: 0.5rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .certificate-card {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="#" id="authLink">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding: 2rem 0;">
+        <h1>My Dashboard</h1>
+        <div id="welcomeMessage"></div>
+
+        <!-- Enrolled Courses Section -->
+        <h2 class="section-title">📚 My Enrollments</h2>
+        <div id="enrollmentsContainer">
+            <div class="loading">Loading your courses...</div>
+        </div>
+
+        <!-- Certificates Section -->
+        <h2 class="section-title">🏆 My Certificates</h2>
+        <div id="certificatesContainer">
+            <div class="loading">Loading certificates...</div>
+        </div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
