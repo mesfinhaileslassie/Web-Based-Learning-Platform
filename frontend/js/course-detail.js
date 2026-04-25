@@ -1,64 +1,94 @@
-// Get course ID from URL query string
+// course-detail.js
+
+// Get course ID from URL
 function getCourseIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
 }
 
-// Render syllabus (accordion style)
-function renderSyllabus(syllabus) {
-    if (!syllabus || syllabus.length === 0) {
-        return '<p>No syllabus available yet.</p>';
+// Toggle module visibility
+window.toggleModule = function(moduleId) {
+    const content = document.getElementById(`module-content-${moduleId}`);
+    const icon = document.getElementById(`module-icon-${moduleId}`);
+    if (content) {
+        const isHidden = content.style.display === 'none';
+        content.style.display = isHidden ? 'block' : 'none';
+        if (icon) {
+            icon.textContent = isHidden ? '▼' : '▶';
+        }
     }
-    let html = '<div class="syllabus"><h3>Course Curriculum</h3>';
-    syllabus.forEach((module, idx) => {
+};
+
+// Render syllabus
+function renderSyllabus(course) {
+    if (!course.syllabus || course.syllabus.length === 0) {
+        return '<p>No syllabus available yet. Coming soon!</p>';
+    }
+    
+    let html = '<div class="syllabus"><h3>📚 Course Curriculum</h3>';
+    
+    course.syllabus.forEach((module, idx) => {
         html += `
             <div class="module">
                 <div class="module-header" onclick="toggleModule(${idx})">
-                    📘 ${module.module_title}
+                    <span>📘 ${module.module_title}</span>
+                    <span id="module-icon-${idx}">▼</span>
                 </div>
-                <div class="module-lessons" id="module-${idx}" style="display: block;">
-                    <ul>
+                <div id="module-content-${idx}" class="module-lessons" style="display: block;">
+                    <ul style="list-style: none; margin: 0; padding: 0;">
         `;
+        
         module.lessons.forEach(lesson => {
-            let typeIcon = lesson.content_type === 'video' ? '🎥' : (lesson.content_type === 'quiz' ? '📝' : '📄');
-            html += `<li>${typeIcon} ${lesson.title} <span style="color:#6b7280; font-size:0.8rem;">${lesson.duration || ''}</span></li>`;
+            let typeIcon = '📄';
+            if (lesson.content_type === 'video') typeIcon = '🎥';
+            else if (lesson.content_type === 'quiz') typeIcon = '📝';
+            
+            html += `
+                <li>
+                    <span class="lesson-icon">${typeIcon}</span>
+                    <span class="lesson-title">${lesson.title}</span>
+                    <span class="lesson-duration">${lesson.duration || ''}</span>
+                </li>
+            `;
         });
+        
         html += `</ul></div></div>`;
     });
+    
     html += '</div>';
     return html;
 }
 
-// Toggle module visibility (global for accordion)
-window.toggleModule = function(idx) {
-    const el = document.getElementById(`module-${idx}`);
-    if (el) {
-        el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-};
-
-// Show enrollment status and button
+// Render enrollment section
 function renderEnrollSection(course, isAlreadyEnrolled, user) {
     const container = document.getElementById('enrollSection');
     if (!container) return;
 
     if (!user) {
         container.innerHTML = `
-            <div class="alert alert-info">🔐 Please <a href="login.html?returnUrl=course-detail.html?id=${course.id}">login</a> to enroll.</div>
+            <div class="alert alert-info">
+                🔐 Please <a href="login.html?returnUrl=course-detail.html?id=${course.id}">login</a> to enroll in this course.
+            </div>
         `;
         return;
     }
 
     if (isAlreadyEnrolled) {
         container.innerHTML = `
-            <div class="alert alert-success">✅ You are already enrolled in this course! <a href="learn.html?course_id=${course.id}">Go to learning →</a></div>
+            <div class="alert alert-success">
+                ✅ You are already enrolled in this course! 
+                <a href="learn.html?course_id=${course.id}">Continue Learning →</a>
+            </div>
         `;
         return;
     }
 
     container.innerHTML = `
         <div class="price-large">$${course.price}</div>
-        <p style="margin: 1rem 0;">One-time payment gives you 3 months access + final exam (3 free attempts).</p>
+        <p style="margin: 1rem 0;">
+            One-time payment gives you <strong>3 months access</strong> + final exam (<strong>3 free attempts</strong>).<br>
+            Pass the exam with 60% to earn your certificate.
+        </p>
         <button id="enrollNowBtn" class="btn btn-large">Enroll Now</button>
         <div id="enrollMessage"></div>
     `;
@@ -73,39 +103,40 @@ function renderEnrollSection(course, isAlreadyEnrolled, user) {
 async function loadCourseDetail() {
     const courseId = getCourseIdFromURL();
     if (!courseId) {
-        document.getElementById('courseDetailContainer').innerHTML = '<p>Invalid course.</p>';
+        document.getElementById('courseDetailContainer').innerHTML = '<div class="alert alert-error">Invalid course ID.</div>';
         return;
     }
 
     const container = document.getElementById('courseDetailContainer');
-    container.innerHTML = '<div class="loading">Loading...</div>';
-
+    
     try {
         const course = await MOCK_API.getCourseDetail(courseId);
         const user = MOCK_API.currentUser;
         const isEnrolled = user ? MOCK_API.isEnrolled(user.id, course.id) : false;
-
-        const syllabusHtml = renderSyllabus(course.syllabus);
+        const syllabusHtml = renderSyllabus(course);
 
         container.innerHTML = `
-            <div style="background: white; border-radius: 1rem; padding: 2rem;">
+            <div class="course-header">
                 <h1>${course.title}</h1>
                 <p style="color: #4b5563; margin: 1rem 0;">${course.description}</p>
-                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div class="course-meta">
                     <span>📚 ${course.modules} modules</span>
                     <span>📖 ${course.lessons} lessons</span>
+                    <span>💰 $${course.price}</span>
                 </div>
-                ${syllabusHtml}
-                <div id="enrollSection" class="enroll-section"></div>
             </div>
+            ${syllabusHtml}
+            <div id="enrollSection" class="enroll-section"></div>
         `;
 
         renderEnrollSection(course, isEnrolled, user);
+        
     } catch (err) {
-        container.innerHTML = `<p style="color:red;">Error: ${err.error || 'Could not load course'}</p>`;
+        container.innerHTML = `<div class="alert alert-error">❌ Error: ${err.error || 'Could not load course'}</div>`;
     }
 }
 
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadCourseDetail();
 });

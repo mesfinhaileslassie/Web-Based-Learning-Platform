@@ -1,12 +1,11 @@
-// learn.js - Learning interface logic
+// learn.js - Learning interface
 
-// Global state
 let currentCourse = null;
 let currentLesson = null;
 let currentLessonIndex = 0;
-let allLessonsList = [];          // flat array of lessons
-let enrollment = null;            // user's enrollment for this course
-let completedLessonIds = [];      // from local storage
+let allLessonsList = [];
+let enrollment = null;
+let completedLessonIds = [];
 
 // Get course ID from URL
 function getCourseIdFromURL() {
@@ -14,11 +13,19 @@ function getCourseIdFromURL() {
     return params.get('course_id');
 }
 
-// Fetch enrollment for current user and course
+// Load enrollment for current user and course
 async function loadEnrollment(courseId) {
     const user = MOCK_API.currentUser;
     if (!user) return null;
-    const enrollmentData = MOCK_API.getEnrollmentByUserAndCourse(user.id, courseId);
+    
+    // Refresh enrollments from storage
+    const enrollments = MOCK_API.getEnrollments();
+    console.log('All enrollments:', enrollments);
+    console.log('Looking for user:', user.id, 'course:', courseId);
+    
+    const enrollmentData = enrollments.find(e => e.userId == user.id && e.courseId == courseId);
+    console.log('Found enrollment:', enrollmentData);
+    
     return enrollmentData;
 }
 
@@ -35,7 +42,7 @@ async function loadCourseData(courseId) {
     }
 }
 
-// Render sidebar curriculum with completion status
+// Render sidebar curriculum
 function renderSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (!currentCourse) {
@@ -45,8 +52,9 @@ function renderSidebar() {
 
     let html = `<h3 style="margin-bottom:1rem;">📚 ${currentCourse.title}</h3>`;
     let globalLessonCounter = 0;
+    
     currentCourse.syllabus.forEach(module => {
-        html += `<div class="module-title">${module.module_title}</div>`;
+        html += `<div class="module-title">📘 ${module.module_title}</div>`;
         module.lessons.forEach(lesson => {
             const isCompleted = completedLessonIds.includes(lesson.lesson_id);
             const activeClass = (currentLesson && currentLesson.lesson_id === lesson.lesson_id) ? 'active' : '';
@@ -61,34 +69,37 @@ function renderSidebar() {
             globalLessonCounter++;
         });
     });
+    
     sidebar.innerHTML = html;
 
-    // Add click handlers to curriculum items
+    // Add click handlers
     document.querySelectorAll('.curriculum-item').forEach(elem => {
         elem.addEventListener('click', (e) => {
             const idx = parseInt(elem.dataset.lessonIndex);
-            loadLessonByIndex(idx);
+            if (!isNaN(idx)) loadLessonByIndex(idx);
         });
     });
 }
 
-// Load a specific lesson by its index in allLessonsList
+// Load lesson by index
 async function loadLessonByIndex(index) {
     if (index < 0 || index >= allLessonsList.length) return;
+    
     currentLessonIndex = index;
     const lessonInfo = allLessonsList[index];
+    
     try {
         const lesson = await MOCK_API.getLessonContent(currentCourse.id, lessonInfo.lesson_id);
         currentLesson = lesson;
         renderLessonContent(lesson);
-        renderSidebar();  // refresh active highlight
+        renderSidebar();
         updateNavButtons();
     } catch (err) {
-        document.getElementById('mainContent').innerHTML = `<p>Error loading lesson: ${err}</p>`;
+        document.getElementById('mainContent').innerHTML = `<div class="alert alert-error">Error loading lesson: ${err}</div>`;
     }
 }
 
-// Render the main content area with the lesson (video/text/practice)
+// Render lesson content
 function renderLessonContent(lesson) {
     const mainEl = document.getElementById('mainContent');
     let contentHtml = `<h1 class="lesson-title">${lesson.title}</h1>`;
@@ -109,7 +120,6 @@ function renderLessonContent(lesson) {
         contentHtml += `<p>Content not available.</p>`;
     }
 
-    // Mark complete button (if not already completed)
     const isAlreadyCompleted = completedLessonIds.includes(lesson.lesson_id);
     if (!isAlreadyCompleted) {
         contentHtml += `<button id="markCompleteBtn" class="btn mark-complete-btn">✓ Mark as Complete</button>`;
@@ -117,25 +127,22 @@ function renderLessonContent(lesson) {
         contentHtml += `<div class="alert alert-success">✅ You have completed this lesson.</div>`;
     }
 
-    contentHtml += `</div>`; // close lesson-content
+    contentHtml += `</div>`;
     mainEl.innerHTML = contentHtml;
 
-    // Attach event for mark complete
     const completeBtn = document.getElementById('markCompleteBtn');
     if (completeBtn) {
         completeBtn.addEventListener('click', () => markLessonComplete(lesson.lesson_id));
     }
 
-    // For practice questions, attach event handlers after render
     if (lesson.content_type === 'quiz' && lesson.practiceQuestions) {
         attachPracticeQuestionHandlers(lesson.practiceQuestions);
     }
 }
 
-
-// Render practice questions (true/false, single choice, multiple choice, combobox)
+// Render practice questions
 function renderPracticeQuestions(questions) {
-    let html = `<h3>Practice Questions</h3><p>Test your understanding. Instant feedback provided.</p>`;
+    let html = `<h3>📝 Practice Questions</h3><p>Test your understanding. Instant feedback provided.</p>`;
     questions.forEach((q, idx) => {
         html += `<div class="practice-question" data-qidx="${idx}">
                     <div class="question-text">${idx+1}. ${q.text}</div>`;
@@ -151,7 +158,7 @@ function renderPracticeQuestions(questions) {
                 html += `<div class="option"><label><input type="checkbox" name="q${idx}" value="${opt}"> ${opt}</label></div>`;
             });
         } else if (q.type === 'combobox') {
-            html += `<select name="q${idx}" class="combobox" style="padding:0.5rem; width:100%;">
+            html += `<select name="q${idx}" class="combobox" style="width:100%; padding:0.5rem;">
                         <option value="">Select...</option>`;
             q.options.forEach(opt => {
                 html += `<option value="${opt}">${opt}</option>`;
@@ -168,15 +175,14 @@ function renderPracticeQuestions(questions) {
 function attachPracticeQuestionHandlers(questions) {
     const checkBtn = document.getElementById('checkAnswersBtn');
     if (!checkBtn) return;
+    
     checkBtn.addEventListener('click', () => {
         let allCorrect = true;
         questions.forEach((q, idx) => {
             let userAnswer = null;
             if (q.type === 'multiple_choice') {
                 const checkboxes = document.querySelectorAll(`input[name="q${idx}"]:checked`);
-                userAnswer = Array.from(checkboxes).map(cb => cb.value);
-                // sort for comparison
-                userAnswer = userAnswer.sort();
+                userAnswer = Array.from(checkboxes).map(cb => cb.value).sort();
                 const correctSorted = [...q.correct].sort();
                 const isCorrect = JSON.stringify(userAnswer) === JSON.stringify(correctSorted);
                 if (!isCorrect) allCorrect = false;
@@ -213,21 +219,17 @@ function showFeedback(questionIdx, isCorrect, correctAnswer) {
     }
 }
 
-// Mark current lesson as complete, update storage and UI
 async function markLessonComplete(lessonId) {
     if (!enrollment) {
         alert("Enrollment not found. Please refresh or contact support.");
         return;
     }
     await MOCK_API.markLessonComplete(enrollment.id, lessonId);
-    // Refresh completed list
     completedLessonIds = await MOCK_API.getCompletedLessons(enrollment.id);
     renderSidebar();
-    // Re-render current lesson to show completion status
     renderLessonContent(currentLesson);
 }
 
-// Update next/prev buttons
 function updateNavButtons() {
     const mainEl = document.getElementById('mainContent');
     let navHtml = `<div class="nav-buttons">`;
@@ -242,12 +244,13 @@ function updateNavButtons() {
         navHtml += `<div></div>`;
     }
     navHtml += `</div>`;
-    // Append to main content if not already there
+    
     if (!document.querySelector('.nav-buttons')) {
         mainEl.insertAdjacentHTML('beforeend', navHtml);
     } else {
         document.querySelector('.nav-buttons').outerHTML = navHtml;
     }
+    
     const prevBtn = document.getElementById('prevLessonBtn');
     const nextBtn = document.getElementById('nextLessonBtn');
     if (prevBtn) prevBtn.addEventListener('click', () => loadLessonByIndex(currentLessonIndex - 1));
@@ -258,35 +261,57 @@ function updateNavButtons() {
 async function initLearn() {
     const courseId = getCourseIdFromURL();
     if (!courseId) {
-        document.getElementById('mainContent').innerHTML = '<p>No course specified.</p>';
+        document.getElementById('mainContent').innerHTML = '<div class="alert alert-error">No course specified.</div>';
         return;
     }
 
     const user = MOCK_API.currentUser;
     if (!user) {
-        document.getElementById('mainContent').innerHTML = '<p>Please login to access this course.</p>';
+        document.getElementById('mainContent').innerHTML = `
+            <div class="alert alert-info">
+                Please login to access this course. 
+                <a href="login.html?returnUrl=learn.html?course_id=${courseId}">Login now</a>
+            </div>
+        `;
         return;
     }
 
     enrollment = await loadEnrollment(courseId);
+    console.log('Enrollment object:', enrollment);
+    
     if (!enrollment) {
-        document.getElementById('mainContent').innerHTML = '<p>You are not enrolled in this course. <a href="course-detail.html?id='+courseId+'">Enroll now</a>.</p>';
+        document.getElementById('mainContent').innerHTML = `
+            <div class="alert alert-info">
+                You are not enrolled in this course. 
+                <a href="course-detail.html?id=${courseId}">Enroll now</a> to start learning.
+            </div>
+        `;
+        document.getElementById('sidebar').innerHTML = '<div class="alert alert-info">Enroll to see curriculum</div>';
         return;
     }
 
-    // Load completed lessons for this enrollment
-    completedLessonIds = await MOCK_API.getCompletedLessons(enrollment.id);
+    // Check if enrollment is expired
+    const deadline = new Date(enrollment.deadline);
+    if (deadline < new Date() && enrollment.status !== 'completed') {
+        document.getElementById('mainContent').innerHTML = `
+            <div class="alert alert-error">
+                ⏰ Your enrollment has expired. Please re-enroll to continue.
+                <a href="course-detail.html?id=${courseId}">Re-enroll now</a>
+            </div>
+        `;
+        return;
+    }
 
-    // Load course data
+    completedLessonIds = await MOCK_API.getCompletedLessons(enrollment.id);
     const course = await loadCourseData(courseId);
+    
     if (!course) {
-        document.getElementById('mainContent').innerHTML = '<p>Course not found.</p>';
+        document.getElementById('mainContent').innerHTML = '<div class="alert alert-error">Course not found.</div>';
         return;
     }
 
     renderSidebar();
 
-    // Determine first uncompleted lesson or first lesson
     let startIndex = 0;
     for (let i = 0; i < allLessonsList.length; i++) {
         if (!completedLessonIds.includes(allLessonsList[i].lesson_id)) {

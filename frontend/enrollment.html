@@ -38,9 +38,19 @@
             font-size: 1.1rem;
             margin-top: 1rem;
         }
-        .loading {
-            text-align: center;
-            padding: 2rem;
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -50,13 +60,16 @@
             <a href="index.html" class="logo">📘 LearnPlatform</a>
             <div class="nav-links">
                 <a href="dashboard.html">Dashboard</a>
-                <a href="login.html">Login / Register</a>
+                <a href="#" id="authLink">Login / Register</a>
             </div>
         </div>
     </nav>
 
     <div class="enrollment-container" id="enrollmentContainer">
-        <div class="loading">Loading course details...</div>
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading course details...</p>
+        </div>
     </div>
 
     <script src="js/mock-api.js"></script>
@@ -71,7 +84,7 @@
         async function loadEnrollmentPage() {
             const courseId = getCourseIdFromURL();
             if (!courseId) {
-                document.getElementById('enrollmentContainer').innerHTML = '<p>Invalid course. <a href="index.html">Go back</a></p>';
+                document.getElementById('enrollmentContainer').innerHTML = '<div class="alert-error">Invalid course. <a href="index.html">Go back</a></div>';
                 return;
             }
 
@@ -80,7 +93,7 @@
                 document.getElementById('enrollmentContainer').innerHTML = `
                     <div class="course-summary">
                         <p>Please login to enroll.</p>
-                        <a href="login.html" class="btn btn-block">Login</a>
+                        <a href="login.html?returnUrl=enrollment.html?course_id=${courseId}" class="btn btn-block">Login</a>
                     </div>
                 `;
                 return;
@@ -89,14 +102,21 @@
             try {
                 const course = await MOCK_API.getCourseDetail(courseId);
                 const user = MOCK_API.currentUser;
-                const alreadyEnrolled = MOCK_API.isEnrolled(user.id, course.id);
+                
+                // Refresh enrollments from storage to ensure latest data
+                const enrollments = MOCK_API.getEnrollments();
+                const alreadyEnrolled = enrollments.some(e => e.userId == user.id && e.courseId == course.id);
+                
+                console.log('Current user:', user);
+                console.log('All enrollments:', enrollments);
+                console.log('Already enrolled?', alreadyEnrolled);
                 
                 if (alreadyEnrolled) {
                     document.getElementById('enrollmentContainer').innerHTML = `
                         <div class="course-summary">
-                            <h2>✅ Already Enrolled</h2>
-                            <p>You are already enrolled in <strong>${course.title}</strong>.</p>
+                            <div class="alert-success">✅ You are already enrolled in <strong>${course.title}</strong>!</div>
                             <a href="learn.html?course_id=${course.id}" class="btn btn-block">Continue Learning →</a>
+                            <a href="dashboard.html" class="btn btn-outline btn-block" style="margin-top: 0.5rem;">Go to Dashboard</a>
                         </div>
                     `;
                     return;
@@ -126,15 +146,19 @@
                     const msgDiv = document.getElementById('enrollMessage');
                     
                     try {
+                        console.log('Attempting enrollment for user:', user.id, 'course:', course.id);
                         const result = await MOCK_API.enroll(user.id, course.id);
+                        console.log('Enrollment result:', result);
+                        
                         if (result.success) {
-                            msgDiv.innerHTML = '<div class="alert alert-success">Enrollment successful! Redirecting to learning...</div>';
+                            msgDiv.innerHTML = '<div class="alert-success">Enrollment successful! Redirecting to learning...</div>';
                             setTimeout(() => {
                                 window.location.href = `learn.html?course_id=${course.id}`;
                             }, 1500);
                         }
                     } catch (err) {
-                        msgDiv.innerHTML = `<div class="alert alert-error">${err.error || 'Enrollment failed'}</div>`;
+                        console.error('Enrollment error:', err);
+                        msgDiv.innerHTML = `<div class="alert-error">${err.error || 'Enrollment failed'}</div>`;
                         btn.disabled = false;
                         btn.textContent = 'Confirm & Pay';
                     }
@@ -145,7 +169,8 @@
                 });
 
             } catch (err) {
-                document.getElementById('enrollmentContainer').innerHTML = `<p>Error loading course: ${err}</p>`;
+                console.error('Load error:', err);
+                document.getElementById('enrollmentContainer').innerHTML = `<div class="alert-error">Error loading course: ${err}</div>`;
             }
         }
 
