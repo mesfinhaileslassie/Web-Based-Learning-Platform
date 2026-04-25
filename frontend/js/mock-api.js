@@ -275,24 +275,25 @@ const MOCK_API = {
         return Promise.reject({ error: "Enrollment not found" });
     },
 
-    recordExamAttempt: function(enrollmentId, passed) {
-        const enrollments = this.getEnrollments();
-        const idx = enrollments.findIndex(e => e.id == enrollmentId);
-        if (idx !== -1) {
-            const enrollment = enrollments[idx];
-            enrollment.examAttemptsUsed++;
-            if (passed) {
-                enrollment.status = "completed";
-                enrollment.certificateIssued = true;
-            } else {
-                if (enrollment.examAttemptsUsed >= (enrollment.examAttemptsPurchased || 3)) {
-                    enrollment.status = "failed";
-                }
+    recordExamAttempt: function(enrollmentId, passed, score = null) {
+    const enrollments = this.getEnrollments();
+    const idx = enrollments.findIndex(e => e.id == enrollmentId);
+    if (idx !== -1) {
+        const enrollment = enrollments[idx];
+        enrollment.examAttemptsUsed++;
+        if (passed) {
+            enrollment.examScore = score || 85;
+            enrollment.status = "completed";
+            this.issueCertificate(enrollmentId);
+        } else {
+            if (enrollment.examAttemptsUsed >= (enrollment.examAttemptsPurchased || 3)) {
+                enrollment.status = "failed";
             }
-            this.saveEnrollments(enrollments);
-            return Promise.resolve({ success: true, enrollment: enrollment });
         }
-        return Promise.reject({ error: "Enrollment not found" });
+        this.saveEnrollments(enrollments);
+        return Promise.resolve({ success: true, enrollment: enrollment });
+    }
+    return Promise.reject({ error: "Enrollment not found" });
     },
 
     getRemainingExamAttempts: function(enrollmentId) {
@@ -557,7 +558,93 @@ getAnalytics: function() {
         passRate,
         courseStats
     });
+},
+
+// ==================== Enhanced Certificate Methods ====================
+// Generate a unique certificate ID (UUID v4 mock)
+generateCertificateUUID: function() {
+    return 'cert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+},
+
+// Get certificate by UUID (for public verification)
+getCertificateByUUID: function(uuid) {
+    const allCerts = this.getAllCertificatesStore();
+    const cert = allCerts.find(c => c.uuid === uuid);
+    if (cert) {
+        return Promise.resolve(cert);
+    }
+    return Promise.reject({ error: "Certificate not found" });
+},
+
+// Get all certificates from storage
+getAllCertificatesStore: function() {
+    const stored = localStorage.getItem("mock_certificates");
+    return stored ? JSON.parse(stored) : [];
+},
+
+// Save all certificates
+saveAllCertificatesStore: function(certs) {
+    localStorage.setItem("mock_certificates", JSON.stringify(certs));
+},
+
+// Override the issueCertificate method to store full certificate details
+issueCertificate: function(enrollmentId) {
+    const enrollments = this.getEnrollments();
+    const idx = enrollments.findIndex(e => e.id == enrollmentId);
+    if (idx !== -1) {
+        const enrollment = enrollments[idx];
+        if (enrollment.certificateIssued) {
+            return Promise.resolve({ success: true, alreadyIssued: true });
+        }
+        
+        // Get course details
+        const course = this.courses.find(c => c.id == enrollment.courseId);
+        const user = this.currentUser || { id: enrollment.userId };
+        
+        // Create certificate record
+        const certificate = {
+            id: Date.now(),
+            uuid: this.generateCertificateUUID(),
+            enrollmentId: enrollment.id,
+            userId: enrollment.userId,
+            courseId: enrollment.courseId,
+            courseTitle: course ? course.title : "Course",
+            userName: user.name || "Student",
+            issuedAt: new Date().toISOString(),
+            completedAt: new Date().toISOString(),
+            score: enrollment.examScore || 85 // mock score for demo
+        };
+        
+        // Store certificate
+        const allCerts = this.getAllCertificatesStore();
+        allCerts.push(certificate);
+        this.saveAllCertificatesStore(allCerts);
+        
+        // Update enrollment
+        enrollment.certificateIssued = true;
+        enrollment.certificateUUID = certificate.uuid;
+        enrollment.status = "completed";
+        this.saveEnrollments(enrollments);
+        
+        return Promise.resolve({ success: true, certificate: certificate });
+    }
+    return Promise.reject({ error: "Enrollment not found" });
+},
+
+// Get certificate for a specific enrollment
+getCertificateForEnrollment: function(enrollmentId) {
+    const allCerts = this.getAllCertificatesStore();
+    const cert = allCerts.find(c => c.enrollmentId == enrollmentId);
+    return Promise.resolve(cert || null);
+},
+
+// Update getUserCertificates to use the new store
+getUserCertificates: function(userId) {
+    const allCerts = this.getAllCertificatesStore();
+    const userCerts = allCerts.filter(c => c.userId == userId);
+    return Promise.resolve(userCerts);
 }
+
 };
 
 // Auto-restore session on load

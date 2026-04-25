@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Certificate | LearnPlatform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .verify-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .certificate-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            margin-top: 2rem;
+        }
+        .certificate-card h2 {
+            color: #78350f;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        .certificate-seal {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.3;
+            font-size: 4rem;
+        }
+        .verified-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .invalid-badge {
+            background: #ef4444;
+        }
+        .cert-details {
+            text-align: left;
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: rgba(255,255,255,0.6);
+            border-radius: 0.5rem;
+        }
+        .cert-details p {
+            margin: 0.5rem 0;
+        }
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+        .qr-code {
+            text-align: center;
+            margin: 1rem 0;
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .btn-download {
+            background: #059669;
+        }
+        .btn-download:hover {
+            background: #047857;
+        }
+        @media print {
+            .navbar, .search-box, .btn-group, .demo-note, .btn {
+                display: none !important;
+            }
+            .verify-container {
+                box-shadow: none;
+                padding: 0;
+                margin: 0;
+            }
+            .certificate-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">📘 LearnPlatform</a>
+            <div class="nav-links">
+                <a href="dashboard.html">Dashboard</a>
+                <a href="login.html">Login / Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="verify-container">
+        <h1>🔍 Certificate Verification</h1>
+        <p>Enter the certificate ID (UUID) to verify its authenticity.</p>
+        
+        <div class="search-box">
+            <input type="text" id="certUUID" placeholder="e.g., cert-1234567890-abc123" autocomplete="off">
+            <button id="verifyBtn" class="btn">Verify</button>
+        </div>
+        
+        <div id="resultContainer"></div>
+        
+        <div class="demo-note" style="margin-top: 2rem; font-size: 0.8rem; color: #6b7280; text-align: center;">
+            <strong>Demo:</strong> After earning a certificate, you can find its UUID in your dashboard.
+        </div>
+    </div>
+
+    <script src="js/mock-api.js"></script>
+    <script>
+        let currentCertificate = null;
+        
+        async function verifyCertificate() {
+            const uuid = document.getElementById('certUUID').value.trim();
+            const resultContainer = document.getElementById('resultContainer');
+            
+            if (!uuid) {
+                resultContainer.innerHTML = '<div class="alert alert-error">Please enter a certificate ID.</div>';
+                return;
+            }
+            
+            resultContainer.innerHTML = '<div class="loading">Verifying...</div>';
+            
+            try {
+                const cert = await MOCK_API.getCertificateByUUID(uuid);
+                currentCertificate = cert;
+                resultContainer.innerHTML = `
+                    <div id="certificateToPrint">
+                        <div class="certificate-card">
+                            <div class="verified-badge">✓ VERIFIED</div>
+                            <h2>🎓 Certificate of Completion</h2>
+                            <div class="cert-details">
+                                <p><strong>Certificate ID:</strong> ${cert.uuid}</p>
+                                <p><strong>Awarded To:</strong> ${cert.userName}</p>
+                                <p><strong>Course:</strong> ${cert.courseTitle}</p>
+                                <p><strong>Issue Date:</strong> ${new Date(cert.issuedAt).toLocaleDateString()}</p>
+                                <p><strong>Final Exam Score:</strong> ${cert.score}%</p>
+                                <p><strong>Valid Through:</strong> Lifetime</p>
+                            </div>
+                            <div class="qr-code">
+                                ┌─────────────────────┐<br>
+                                │  VERIFIED CERTIFICATE │<br>
+                                │  ${cert.uuid.substring(0, 24)} │<br>
+                                │  Scan to verify online │<br>
+                                └─────────────────────┘
+                            </div>
+                            <div class="certificate-seal">🎓</div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button id="downloadPdfBtn" class="btn btn-download">📥 Download as PDF</button>
+                        <button id="printBtn" class="btn">🖨️ Print</button>
+                    </div>
+                `;
+                
+                document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
+                document.getElementById('printBtn').addEventListener('click', () => window.print());
+            } catch (err) {
+                resultContainer.innerHTML = `
+                    <div class="alert alert-error">❌ Certificate not found. Please check the ID and try again.</div>
+                `;
+                currentCertificate = null;
+            }
+        }
+        
+        async function downloadPDF() {
+            if (!currentCertificate) return;
+            const element = document.getElementById('certificateToPrint');
+            const opt = {
+                margin: [0.5, 0.5, 0.5, 0.5],
+                filename: `certificate_${currentCertificate.userName.replace(/\s/g, '_')}_${currentCertificate.courseTitle.replace(/\s/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, letterRendering: true },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+        
+        document.getElementById('verifyBtn').addEventListener('click', verifyCertificate);
+        document.getElementById('certUUID').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verifyCertificate();
+        });
+        
+        // Check for UUID in URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const uuidParam = urlParams.get('uuid');
+        if (uuidParam) {
+            document.getElementById('certUUID').value = uuidParam;
+            verifyCertificate();
+        }
+    </script>
+</body>
+</html>

@@ -113,9 +113,17 @@ async function loadDashboard() {
         certHtml += '</div>';
         document.getElementById('certificatesContainer').innerHTML = certHtml;
 
+        // In dashboard.js, inside the certificates section
         document.querySelectorAll('.view-cert').forEach(btn => {
-            btn.addEventListener('click', () => {
-                alert("Certificate view will be implemented next. (Mock)");
+            btn.addEventListener('click', async () => {
+                const certId = btn.dataset.certId;
+                const certs = await MOCK_API.getUserCertificates(currentUser.id);
+                const cert = certs.find(c => c.id == certId);
+                if (cert && cert.uuid) {
+                    window.open(`verify-certificate.html?uuid=${cert.uuid}`, '_blank');
+                } else {
+                    alert('Certificate details not found.');
+                }
             });
         });
     }

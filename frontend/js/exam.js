@@ -246,23 +246,19 @@ function submitExam() {
     const passed = percentage >= 60;
 
     // Record attempt in mock-api
-    MOCK_API.recordExamAttempt(currentEnrollment.id, passed).then(async (result) => {
-        if (passed) {
-            await MOCK_API.issueCertificate(currentEnrollment.id);
-            alert(`🎉 Congratulations! You passed with ${percentage.toFixed(1)}%. Certificate has been issued.`);
+    MOCK_API.recordExamAttempt(currentEnrollment.id, passed, percentage).then(async (result) => {
+    if (passed) {
+        alert(`🎉 Congratulations! You passed with ${percentage.toFixed(1)}%. Certificate has been issued.`);
+    } else {
+        const newRemaining = MOCK_API.getRemainingExamAttempts(currentEnrollment.id);
+        if (newRemaining > 0) {
+            alert(`❌ You scored ${percentage.toFixed(1)}%. You need 60% to pass. You have ${newRemaining} attempt(s) left.`);
         } else {
-            const newRemaining = MOCK_API.getRemainingExamAttempts(currentEnrollment.id);
-            if (newRemaining > 0) {
-                alert(`❌ You scored ${percentage.toFixed(1)}%. You need 60% to pass. You have ${newRemaining} attempt(s) left.`);
-            } else {
-                alert(`❌ You scored ${percentage.toFixed(1)}%. You have no attempts remaining. Please purchase more attempts or re-enroll.`);
-            }
+            alert(`❌ You scored ${percentage.toFixed(1)}%. You have no attempts remaining.`);
         }
-        window.location.href = 'dashboard.html';
-    }).catch(err => {
-        alert('Error recording exam attempt: ' + err);
-        window.location.href = 'dashboard.html';
-    });
+    }
+    window.location.href = 'dashboard.html';
+});
 }
 
 // Initialize
